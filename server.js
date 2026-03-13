@@ -4,36 +4,43 @@ const path = require("path");
 const fs = require("fs");
 
 const app = express();
-
 const PORT = process.env.PORT || 3000;
 
-// create uploads folder if not exists
+/* Create uploads folder if not exists */
 if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
 
+/* Storage config */
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + ".jpg");
+    cb(null, "latest.jpg"); // overwrite latest image
   }
 });
 
 const upload = multer({ storage: storage });
 
+/* Allow frontend access */
 app.use(express.static("public"));
 app.use("/uploads", express.static("uploads"));
 
-// upload API
+/* Upload API */
 app.post("/upload", upload.single("image"), (req, res) => {
-  console.log("Image uploaded");
-  res.send("Image received");
+  console.log("Image received from device");
+  res.json({ status: "uploaded" });
 });
 
+/* API to get latest image */
+app.get("/latest", (req, res) => {
+  res.sendFile(path.join(__dirname, "uploads/latest.jpg"));
+});
+
+/* Root route */
 app.get("/", (req, res) => {
-  res.send("Animal Intrusion Detection Server Running");
+  res.send("Animal Intrusion Detection API Running");
 });
 
 app.listen(PORT, () => {
